@@ -65,11 +65,11 @@ class Batch:
             self._strings[idx] = string
 
 
-    def serialize(self, embeddings: np.ndarray) -> bytes:
+    def serialize(self, embeddings: np.ndarray) -> np.ndarray:
         # lesson learned
         # do not use .astype as that is a cast on each element of the array
         # use .view, which is simular to C++'s reinterpret_cast
-        return np.concatenate((self._bytes, embeddings.flatten().view(np.uint8))).tobytes()
+        return np.concatenate((self._bytes, embeddings.flatten().view(np.uint8)))
     
 class EncodeSearchUDL(UserDefinedLogic):
     def __init__(self, conf_str: str):
