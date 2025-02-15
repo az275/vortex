@@ -250,6 +250,12 @@ class ClientNotificationBatcher {
     uint32_t num_aggregates = 0;
     bool include_distances = false;
 
+    // below are variables serialize_for_doc_retrieval()
+    uint32_t metadata_size;
+    uint32_t total_text_size;
+    
+    std::unordered_map<query_id_t,uint32_t> text_size;
+
     std::vector<std::unique_ptr<ClusterSearchResultsAggregate>> aggregates;
     std::shared_ptr<derecho::cascade::Blob> blob;
 
@@ -259,8 +265,10 @@ public:
     void add_aggregate(std::unique_ptr<ClusterSearchResultsAggregate> aggregate);
 
     std::shared_ptr<derecho::cascade::Blob> get_blob();
+    int get_front_query_id();
 
     void serialize();
+    void serialize_for_doc_retrieval();
     void reset();
 };
 
