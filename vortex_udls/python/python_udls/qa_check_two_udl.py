@@ -10,16 +10,20 @@ from derecho.cascade.member_client import ServiceClientAPI
 from derecho.cascade.member_client import TimestampLogger
 from derecho.cascade.udl import UserDefinedLogic
 
+'''
+Multi-model running test program
+Verify if this QACheckTWOUDL and QACheckUDL 
+can run concurrently side by side
+'''
 
 
 
-
-class QACheckUDL(UserDefinedLogic):
+class QACheckTWOUDL(UserDefinedLogic):
     '''
     AnswerCheckUDL is udl that run NLI model to check if the answer contains harmful information
     '''
     def __init__(self,conf_str):
-        super(QACheckUDL,self).__init__(conf_str)
+        super(QACheckTWOUDL,self).__init__(conf_str)
         self.conf = json.loads(conf_str)
         self.tl = TimestampLogger()
         self.capi = ServiceClientAPI()
@@ -51,14 +55,14 @@ class QACheckUDL(UserDefinedLogic):
         '''
         Load model to GPU
         '''
-        print(f"[{time.time():.2f}] Loading model to GPU...")
+        print(f"[{time.time():.2f}] QACheckTWOUDL Loading model to GPU...")
         self.nli_tokenizer = BartTokenizer.from_pretrained(self.model_name)
         self.model = BartForSequenceClassification.from_pretrained(self.model_name)
         for param in self.model.parameters():
             param.requires_grad = False
         self.model.to(self.device)
         self.model.eval()
-        print(f"[{time.time():.2f}] Model loaded to GPU")
+        print(f"[{time.time():.2f}] QACheckTWOUDL Model loaded to GPU")
 
 
     def batch_collector(self):
@@ -90,9 +94,9 @@ class QACheckUDL(UserDefinedLogic):
                     break
 
             if batch:
-                print(f"[{time.time():.2f}] Running inference on batch of size {len(batch)}...")
+                print(f"[{time.time():.2f}]QACheckTWOUDL Running inference on batch of size {len(batch)}...")
                 batch_latency, true_probs = self.textcheck(batch)
-                print(f"[{time.time():.2f}] Batch Latency: {batch_latency:.3f}s ")
+                print(f"[{time.time():.2f}]QACheckTWOUDL Batch Latency: {batch_latency:.3f}s ")
                 self.send_to_next_udl(true_probs)
                 
 
@@ -104,7 +108,7 @@ class QACheckUDL(UserDefinedLogic):
         if self.nli_tokenizer is None:
             self.load_model_toGPU()
         
-        print(f"[{time.time():.2f}] textcheck Processing batch of size {len(batch_premise)}...")
+        print(f"[{time.time():.2f}]QACheckTWOUDL textcheck Processing batch of size {len(batch_premise)}...")
         # Note: this step is blocking, doesn't release the GIL  
         inputs = self.nli_tokenizer(batch_premise, [self.hypothesis] * len(batch_premise),
                         return_tensors="pt", padding=True, truncation=True).to(self.device)
@@ -127,7 +131,7 @@ class QACheckUDL(UserDefinedLogic):
         #     print(f"[{time.time():.2f}] Premise {i+1}: Probability that the label is true: {prob:.2f}%")
         self.processed_tasks += len(batch_premise)
         
-        print(f"[{time.time():.2f}] Processed {self.processed_tasks} tasks")
+        print(f"[{time.time():.2f}]QACheckTWOUDL Processed {self.processed_tasks} tasks")
 
         return batch_latency, true_probs
 
@@ -148,7 +152,7 @@ class QACheckUDL(UserDefinedLogic):
         with self.cond_var:            
             for input_text in input_texts:
                 self.task_queue.put((input_text))
-                print(f"[{time.time():.2f}] Task added to queue. Queue size: {self.task_queue.qsize()}")
+                print(f"[{time.time():.2f}]QACheckTWOUDL Task added to queue. Queue size: {self.task_queue.qsize()}")
             self.cond_var.notify()
 
     def ocdpo_handler(self,**kwargs):
@@ -159,7 +163,7 @@ class QACheckUDL(UserDefinedLogic):
         blob = kwargs["blob"]
         decoded_json_string = blob.tobytes().decode('utf-8')
         query_list = json.loads(decoded_json_string)
-        print(f"[{time.time():.2f}] Received query: {query_list}")
+        print(f"[{time.time():.2f}]QACheckTWOUDL Received query: {query_list}")
         self.add_tasks_to_queue(query_list)
         
         
