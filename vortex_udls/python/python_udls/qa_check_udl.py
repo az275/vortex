@@ -12,6 +12,9 @@ from derecho.cascade.udl import UserDefinedLogic
 
 
 
+'''
+Used for the ablation study of the pipeline
+'''
 
 
 class QACheckUDL(UserDefinedLogic):
