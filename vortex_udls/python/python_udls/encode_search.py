@@ -8,7 +8,7 @@ import numpy as np
 from typing import Any
 from FlagEmbedding import BGEM3FlagModel
 
-import cascade_context
+import cascade_context #type: ignore
 from derecho.cascade.udl import UserDefinedLogic
 from derecho.cascade.member_client import TimestampLogger
 
@@ -73,20 +73,22 @@ class Batch:
     
 class EncodeSearchUDL(UserDefinedLogic):
     def __init__(self, conf_str: str):
-
-        conf: dict[str, Any] = json.loads(conf_str)
-
+        self._conf: dict[str, Any] = json.loads(conf_str)
         self._tl = TimestampLogger()
-        self._encoder = BGEM3FlagModel(
-            model_name_or_path=conf["encoder_config"]["model"],
-            device=conf["encoder_config"]["device"],
-            use_fp16=False,
-        )
-        self._emb_dim = int(conf["emb_dim"])
+        self._encoder = None
         self._batch = Batch()
         self._batch_id = 0
 
     def ocdpo_handler(self, **kwargs):
+        if self._encoder is None:
+            # load encoder when we need it to prevent overloading
+            # the hardware during startup
+            self._encoder = BGEM3FlagModel(
+                model_name_or_path=self._conf["encoder_config"]["model"],
+                device=self._conf["encoder_config"]["device"],
+                use_fp16=False,
+            )
+
         data = kwargs["blob"]
         
         self._batch.deserialize(data)
@@ -98,13 +100,12 @@ class EncodeSearchUDL(UserDefinedLogic):
             return_colbert_vecs=False,
         )
         query_embeddings: np.ndarray = res["dense_vecs"]
-        query_embeddings_trunc = query_embeddings[:, :self._emb_dim]
         self._batch_id += 1
 
 
         # format should be {client}_{batch_id}
         key_str = f"{self._batch.client_id}_{self._batch_id}"
-        output_bytes = self._batch.serialize(query_embeddings_trunc)
+        output_bytes = self._batch.serialize(query_embeddings)
         cascade_context.emit(key_str, output_bytes, message_id=kwargs["message_id"])
         return None
     

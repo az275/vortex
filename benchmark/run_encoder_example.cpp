@@ -71,7 +71,7 @@ int main() {
         {30 ,std::make_shared<std::string>("SUPER LONG MESSAGE kjsdjflkasfj;asdkljf;klasdfj;aosdklfj;asdlkfjl;asdkfjl;asdfjk;asldkfj;asldkfjasl;dfjkl;asdkfjl;asdkfjl;askdfjl;aksdjfl;adksjfl;asdkjf;alskdfj;lakdjf;")},
     };
 
-    EncoderQueryBatcher batcher(1024, queries.size());
+    EncoderQueryBatcher batcher(384, queries.size());
 
     for(const auto& query : queries) {
         batcher.add_query(
