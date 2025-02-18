@@ -10,6 +10,7 @@ from derecho.cascade.member_client import ServiceClientAPI
 from derecho.cascade.member_client import TimestampLogger
 from derecho.cascade.udl import UserDefinedLogic
 
+from pyudl_serialize_utils import DocGenResultBatcher
 
 
 '''
@@ -144,15 +145,6 @@ class QACheckUDL(UserDefinedLogic):
         pass
 
 
-    def add_tasks_to_queue(self, input_texts):
-        """
-        Adds a text classification task to the queue with timestamp
-        """
-        with self.cond_var:            
-            for input_text in input_texts:
-                self.task_queue.put((input_text))
-                print(f"[{time.time():.2f}] Task added to queue. Queue size: {self.task_queue.qsize()}")
-            self.cond_var.notify()
 
     def ocdpo_handler(self,**kwargs):
         """
@@ -160,10 +152,11 @@ class QACheckUDL(UserDefinedLogic):
         """
         key = kwargs["key"]
         blob = kwargs["blob"]
-        decoded_json_string = blob.tobytes().decode('utf-8')
-        query_list = json.loads(decoded_json_string)
+        doc_gen_result_batch = DocGenResultBatcher()
+        doc_gen_result_batch.deserialize_to_concate_strings(blob)
+        query_list = doc_gen_result_batch.full_texts
         print(f"[{time.time():.2f}] Received query: {query_list}")
-        self.add_tasks_to_queue(query_list)
+        self.textcheck(query_list)
         
         
 

@@ -174,8 +174,8 @@ void AggGenOCDPO::BatchingThread::main_loop(DefaultCascadeContextType* typed_ctx
                     int front_query_id = batcher.get_front_query_id(); // use the first query id as the id for the object
                     obj.key = EMIT_DOCRETRIEVAL_PREFIX "/"  + std::to_string(parent->my_id) + "_" + std::to_string(front_query_id);
                     obj.blob = std::move(*batcher.get_blob());
-
-                    typed_ctxt->get_service_client_ref().put_and_forget(obj, true); // use HASH scheme to distribute
+                    uint32_t shard_id = 0; //static_cast<uint32_t>(item.first) % num_shards
+                    typed_ctxt->get_service_client_ref().put_and_forget<VolatileCascadeStoreWithStringKey>(obj, DOCRETRIEVAL_UDL_SUBGROUP_INDEX, shard_id, true);
                 }
 
                 num_sent += batch_size;

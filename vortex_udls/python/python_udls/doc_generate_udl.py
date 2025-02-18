@@ -1,201 +1,135 @@
 #!/usr/bin/env python3
 import json
+import logging
 import numpy as np
 import pickle
-import struct
 import torch
 import transformers
+from typing import MutableSequence, Dict
 
 import cascade_context
 from derecho.cascade.member_client import ServiceClientAPI
 from derecho.cascade.member_client import TimestampLogger
 from derecho.cascade.udl import UserDefinedLogic
+from pyudl_serialize_utils import DocGenResult, DocGenResultBatcher, AggregateResultBatch
 
-
-# class AggBatch:
-#     def __init__(self, query_id, doc_ids, distances):
-#         self._bytes: np.ndarray = np.ndarray(shape=(0, ), dtype=np.uint8)
-#         self._query_ids: list[int] = []
-#         self._doc_ids: list[str] = []
-#         self._distances: list[float] = []
-
-#     def __str__(self):
-#         pass
-
-#     def deserialize_client_notification(blob_data):
-
-#         pass
-
-class ClientNotificationBatcherDeserializer:
-    def __init__(self, data: np.ndarray):
-        self._bytes = data
-
-        # Define structured dtypes
-        header_type = np.dtype([
-            ('num_aggregates', np.uint32),
-            ('top_k', np.uint32)
-        ])
-        
-        metadata_type = np.dtype([
-            ('query_id', np.uint64),
-            ('client_id', np.uint32),
-            ('text_position', np.uint32),
-            ('text_size', np.uint32),
-            ('doc_ids_position', np.uint32),
-            ('doc_ids_size', np.uint32),
-        ])
-
-        # Read header using NumPy view
-        header = np.frombuffer(data, dtype=header_type, count=1)[0]
-        self.num_aggregates, self.top_k = header['num_aggregates'], header['top_k']
-
-        # Read metadata section using NumPy view 
-        metadata_start = header_type.itemsize
-        metadata_end = metadata_start + metadata_type.itemsize * self.num_aggregates
-        metadata = np.frombuffer(data, dtype=metadata_type, offset=metadata_start, count=self.num_aggregates)
-
-        self.queries = []
-
-        for m in metadata:
-            query_id = m['query_id']
-            client_id = m['client_id']
-            text_position = m['text_position']
-            text_size = m['text_size']
-            doc_ids_position = m['doc_ids_position']
-            doc_ids_size = m['doc_ids_size']
-
-            # use NumPy views to slice text and doc IDs
-            text = memoryview(data)[text_position:text_position + text_size]  # Avoids unnecessary string decoding
-            doc_ids = np.frombuffer(data, dtype=np.int64, offset=doc_ids_position, count=doc_ids_size // np.dtype(np.int64).itemsize)
-
-            self.queries.append({
-                'query_id': query_id,
-                'client_id': client_id,
-                'text': text,  # Can be decoded only when needed
-                'doc_ids': doc_ids  # NumPy array, avoids list conversion
-            })
-
-    def get_queries(self, decode_texts=False):
-        """
-        Returns queries, with an option to decode text strings only when necessary.
-        """
-        if decode_texts:
-            return [{
-                'query_id': q['query_id'],
-                'client_id': q['client_id'],
-                'text': q['text'].tobytes().decode("utf-8"),  # Decode on demand
-                'doc_ids': q['doc_ids']
-            } for q in self.queries]
-        return self.queries
+NEXT_UDL_PREFIXES = ["/rag/generate/check"]
+NEXT_UDL_SUBGROUP_INDEXES = [1]
 
 class DocGenerateUDL(UserDefinedLogic):
     """
     This UDL is used to retrieve documents and generate response using LLM.
     """
-    
-    def load_llm(self,):
-        model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
-        self.pipeline = transformers.pipeline(
-            "text-generation",
-            model=model_id,
-            model_kwargs={"torch_dtype": torch.bfloat16},
-            device_map="auto",
-        )
-        self.terminators = [
-            self.pipeline.tokenizer.eos_token_id,
-            self.pipeline.tokenizer.convert_tokens_to_ids("<|eot_id|>")
-        ]
-        
 
     def __init__(self,conf_str):
         '''
         Constructor
         '''
-        # collect the cluster search result {(query_batch_key,query_count):{query_id: ClusterSearchResults, ...}, ...}
-        self.cluster_search_res = {}
         # collect the LLM result per client_batch {(query_batch_key,query_count):{query_id: LLMResult, ...}, ...}
         self.llm_res = {}
         self.conf = json.loads(conf_str)
         self.capi = ServiceClientAPI()
         self.my_id = self.capi.get_my_id()
         self.tl = TimestampLogger()
-        self.doc_file_name = './perf_data/miniset/doc_list.pickle'
-        self.answer_mapping_file = './perf_data/miniset/answer_mapping.pickle'
-        self.doc_list = None
-        self.answer_mapping = None
+        self.doc_file_name = './perf_data/miniset/doc_list.pkl'
+        self.doc_content_list = None
         self.pipeline = None
         self.terminators = None
-        print("--- DocGenerateUDL initialized")
-    
-    
-    def _get_doc(self, cluster_id, emb_id):
-        """
-        Helper method to get the document string in natural language.
-        load the documents from disk if not in memory.
-        @cluster_id: The id of the KNN cluster where the document falls in.
-        @emb_id: The id of the document within the cluster.
-        @return: The document string in natural language.
-        """
-        if self.answer_mapping is None:
-            with open(self.answer_mapping_file, "rb") as file:
-                self.answer_mapping = pickle.load(file)
-        if self.doc_list is None:
-            with open(self.doc_file_name, 'rb') as file:
-                self.doc_list = pickle.load(file)
-        return self.doc_list[self.answer_mapping[cluster_id][emb_id]]
-          
+        print("[DocGenerateUDL] initialized")
+        # self.pending_queries = [] # list of AggregateResultBatch
 
 
-    def retrieve_documents(self, search_result):
-        """
-        @search_result: [(cluster_id, emb_id), ...]
-        @return doc_list: [document_1, document_2, ...]
-        """     
-        doc_list = []
-        for cluster_id, emb_id in search_result.items():
-            doc_list.append(self._get_doc(cluster_id, emb_id))
-        return doc_list
-
-
-    def llm_generate(self, query_text, doc_list):
-        """
-        @query: client query
-        @doc_list: list of documents
-        @return: llm generated response
-        """    
-        messages = [
-            {"role": "system", "content": "Answer the user query based on this list of documents:"+" ".join(doc_list)},
-            {"role": "user", "content": query_text},
-        ]
-        
-        llm_result = self.pipeline(
-            messages,
-            max_new_tokens=256,
-            eos_token_id=self.terminators,
-            do_sample=True,
-            temperature=0.6,
-            top_p=0.9,
+    def load_llm(self,):
+        model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
+        logging.getLogger("transformers").setLevel(logging.ERROR)
+        self.pipeline = transformers.pipeline(
+            "text-generation",
+            model=model_id,
+            model_kwargs={"torch_dtype": torch.float16},
+            device_map="auto",
         )
-        response = llm_result[0]["generated_text"][-1]['content']
-        print(f"for query:{query_text}")
-        print(f"the llm generated response: {response}")
-        return response
+        self.terminators = [
+            self.pipeline.tokenizer.eos_token_id,
+            self.pipeline.tokenizer.convert_tokens_to_ids("<|eot_id|>")
+        ]
+        self.pipeline.tokenizer.pad_token = self.pipeline.tokenizer.eos_token
+        
+    
+    def load_doc(self):
+        """
+        Helper method to load the document content list to memory.
+        """
+        with open(self.doc_file_name, 'rb') as f:
+            self.doc_content_list = pickle.load(f)
+        # print(f"Loaded {len(self.doc_content_list)} documents")
           
-               
-     
+
+
+    def retrieve_documents(self, queries: MutableSequence[Dict[str, any]]) -> MutableSequence[DocGenResult]:
+        """
+        batch retrieve documents based on search results
+        @queries: list of queries. list and dictionary are mutable objects in python, passed by reference
+        @return: list of DocGenResult objects
+        """     
+        result_list = []
+        if not self.doc_content_list:
+            self.load_doc()
+        for query in queries:            
+            result_list.append(DocGenResult(query['query_id'], query['client_id'], query['text'], [self.doc_content_list[doc_id] for doc_id in query['doc_ids']]))
+        return result_list
+
+
+    def llm_generate(self, doc_gen_results: MutableSequence[DocGenResult]):
+        """
+        @doc_gen_results: list of DocGenResult objects, containing query text, context list
+        """    
+        if not self.pipeline:
+            self.load_llm()
+            
+        for query in doc_gen_results:
+            messages = [
+                {"role": "system", "content": "Answer the user query based on this list of documents:"+" ".join(query.context)},
+                {"role": "user", "content": query.text},
+            ]
+            
+            llm_result = self.pipeline(
+                messages,
+                max_new_tokens=256,
+                eos_token_id=self.terminators,
+                do_sample=True,
+                temperature=0.6,
+                top_p=0.9,
+            )
+            query.response = llm_result[0]["generated_text"][-1]['content']
+            print(f" [DocGenerateUDL] llm generated response: {query.response[:10]}")
+            
      
     def ocdpo_handler(self,**kwargs):
         key = kwargs["key"]
         blob = kwargs["blob"]
-        print("in DocGenerateUDL ocdpo_handler")
         binary_data = np.frombuffer(blob, dtype=np.uint8)
-        deserializer = ClientNotificationBatcherDeserializer(binary_data)
-        queries = deserializer.get_queries(decode_texts=True)
-        print(f"DocGenerateUDL received {len(queries)} queries")
-        for query_id in range(len(queries)):
-            print(f"{query_id}: {queries[query_id]}")
+        agg_results = AggregateResultBatch(binary_data)
+        batched_queries = agg_results.get_queries(decode_texts=True)
+        print(f" [DocGenerateUDL] received {len(batched_queries)} queries from {key}")
+        
+        doc_gen_results = self.retrieve_documents(batched_queries)
+        print(f" [DocGenerateUDL] retrieved {len(doc_gen_results)} documents")
+        self.llm_generate(doc_gen_results)
+
+        # serialize the result
+        result_batcher = DocGenResultBatcher()
+        for result in doc_gen_results:
+            result_batcher.add_doc_gen_result(result)
+            
+        result_batcher.serialize_to_concate_strings()
+        
+        # emit to the next UDL
+        new_key = NEXT_UDL_PREFIXES[0] + f"/{key}"
+        cascade_context.emit(new_key, result_batcher._bytes)
+        print(f" [DocGenerateUDL] emitted {key} results to {new_key}")
 
           
 
     def __del__(self):
         pass
+    

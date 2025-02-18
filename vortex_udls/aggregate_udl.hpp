@@ -21,7 +21,9 @@ namespace cascade {
 
 #define NOTIFY_CLIENT_PREFIX "/rag/results"
 #define EMIT_DOCRETRIEVAL_PREFIX "/rag/generate/doc"
-// #define DOCRETRIEVAL_SUBGROUP_INDEX 2
+// #define DOCRETRIEVAL_UDL_SUBGROUP_INDEX 2
+#define DOCRETRIEVAL_UDL_SUBGROUP_INDEX 1 // cluster_search udl subgroup_id
+
 
 std::string get_uuid() {
     return MY_UUID;
