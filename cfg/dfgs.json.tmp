@@ -51,7 +51,7 @@
                 {
                         "emb_dim":384,
                         "top_k":20,
-                        "faiss_search_type":3,
+                        "faiss_search_type":1,
                         "dataset_name": "perf_data/hnsw_index/miniset",
                         "hnsw_m": 100,
                         "hnsw_ef_construction": 200,
@@ -90,6 +90,7 @@
                         "python_path":["python_udls"],
                         "module":"doc_generate_udl",
                         "entry_class":"DocGenerateUDL",
+                        "doc_file_name":"./perf_data/low_miniset/doc_list.pkl",
                         "udl_conf_key1":"doc_gen_udl config key 1"
                     }],
                 "destinations": [{"/rag/generate/check":"put", "/rag/generate/speech":"put"}]

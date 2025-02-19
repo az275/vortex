@@ -14,6 +14,7 @@ from derecho.cascade.member_client import TimestampLogger
 
 warnings.filterwarnings("ignore")
 
+
 class Batch:
     def __init__(self):
         self._bytes: np.ndarray = np.ndarray(shape=(0, ), dtype=np.uint8)
@@ -70,7 +71,8 @@ class Batch:
         # do not use .astype as that is a cast on each element of the array
         # use .view, which is simular to C++'s reinterpret_cast
         return np.concatenate((self._bytes, embeddings.flatten().view(np.uint8)))
-    
+
+
 class EncodeSearchUDL(UserDefinedLogic):
     def __init__(self, conf_str: str):
         self._conf: dict[str, Any] = json.loads(conf_str)
@@ -91,6 +93,7 @@ class EncodeSearchUDL(UserDefinedLogic):
 
         data = kwargs["blob"]
         
+        
         self._batch.deserialize(data)
         
         res: Any = self._encoder.encode(
@@ -104,7 +107,7 @@ class EncodeSearchUDL(UserDefinedLogic):
 
 
         # format should be {client}_{batch_id}
-        key_str = f"{self._batch.client_id}_{self._batch_id}"
+        key_str = kwargs["key"]
         output_bytes = self._batch.serialize(query_embeddings)
         cascade_context.emit(key_str, output_bytes, message_id=kwargs["message_id"])
         return None

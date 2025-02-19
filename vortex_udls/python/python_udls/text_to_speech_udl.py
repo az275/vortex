@@ -1,5 +1,4 @@
 import json
-import logging
 import queue
 import textwrap
 import time
@@ -17,6 +16,7 @@ from derecho.cascade.member_client import TimestampLogger
 from derecho.cascade.udl import UserDefinedLogic
 
 from pyudl_serialize_utils import DocGenResultBatcher
+
 
 
 '''
@@ -46,7 +46,6 @@ class TextToSpeechUDL(UserDefinedLogic):
         '''
         Load model to GPU
         '''
-        logging.getLogger("transformers").setLevel(logging.ERROR)
         self.processor = SpeechT5Processor.from_pretrained("microsoft/speecht5_tts")
         self.model = SpeechT5ForTextToSpeech.from_pretrained("microsoft/speecht5_tts").to(self.device)
         self.vocoder = SpeechT5HifiGan.from_pretrained("microsoft/speecht5_hifigan").to(self.device)

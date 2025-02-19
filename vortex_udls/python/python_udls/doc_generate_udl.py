@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import json
-import logging
 import numpy as np
 import pickle
 import torch
@@ -31,7 +30,7 @@ class DocGenerateUDL(UserDefinedLogic):
         self.capi = ServiceClientAPI()
         self.my_id = self.capi.get_my_id()
         self.tl = TimestampLogger()
-        self.doc_file_name = './perf_data/miniset/doc_list.pkl'
+        self.doc_file_name = self.conf["doc_file_name"]
         self.doc_content_list = None
         self.pipeline = None
         self.terminators = None
@@ -41,7 +40,6 @@ class DocGenerateUDL(UserDefinedLogic):
 
     def load_llm(self,):
         model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
-        logging.getLogger("transformers").setLevel(logging.ERROR)
         self.pipeline = transformers.pipeline(
             "text-generation",
             model=model_id,

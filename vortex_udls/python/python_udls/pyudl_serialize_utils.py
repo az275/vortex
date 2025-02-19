@@ -1,5 +1,8 @@
 import numpy as np
 
+import warnings
+warnings.filterwarnings("ignore")
+
 
 def utf8_length(s: str) -> int:
     """Computes the length of a UTF-8 encoded string without actually encoding it."""
