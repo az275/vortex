@@ -58,7 +58,7 @@ class TextToSpeechUDL(UserDefinedLogic):
         print(f"Txt2Speech Model loaded to GPU")
 
 
-    def split_text(self, text, chunk_size=600):
+    def split_text(self, text, chunk_size=550):
         return textwrap.wrap(text, width=chunk_size) 
 
 

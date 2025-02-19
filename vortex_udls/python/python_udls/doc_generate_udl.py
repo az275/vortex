@@ -51,6 +51,7 @@ class DocGenerateUDL(UserDefinedLogic):
             self.pipeline.tokenizer.convert_tokens_to_ids("<|eot_id|>")
         ]
         self.pipeline.tokenizer.pad_token = self.pipeline.tokenizer.eos_token
+        print("[DocGenerateUDL] loaded LLM model")
         
     
     def load_doc(self):
@@ -99,7 +100,6 @@ class DocGenerateUDL(UserDefinedLogic):
                 top_p=0.9,
             )
             query.response = llm_result[0]["generated_text"][-1]['content']
-            print(f" [DocGenerateUDL] llm generated responss")
             
      
     def ocdpo_handler(self,**kwargs):
@@ -110,7 +110,6 @@ class DocGenerateUDL(UserDefinedLogic):
         batched_queries = agg_results.get_queries(decode_texts=True)
         
         doc_gen_results = self.retrieve_documents(batched_queries)
-        print(f" [DocGenerateUDL] retrieved {len(doc_gen_results)} documents for {key}")
         self.llm_generate(doc_gen_results)
 
         # serialize the result
