@@ -51,7 +51,7 @@
                 {
                         "emb_dim":384,
                         "top_k":20,
-                        "faiss_search_type":1,
+                        "faiss_search_type":0,
                         "dataset_name": "perf_data/hnsw_index/miniset",
                         "hnsw_m": 100,
                         "hnsw_ef_construction": 200,

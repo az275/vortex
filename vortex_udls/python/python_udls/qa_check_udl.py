@@ -37,13 +37,13 @@ class QACheckUDL(UserDefinedLogic):
         
         self.task_queue = queue.Queue()
         
-        self.max_batch_size = 4
-        self.min_batch_size = 1
-        self.batch_timeout = 1.0
-        self.running = True
-        self.cond_var = threading.Condition() 
-        worker_thread = threading.Thread(target=self.batch_collector, daemon=True)
-        worker_thread.start()
+        # self.max_batch_size = 4
+        # self.min_batch_size = 1
+        # self.batch_timeout = 1.0
+        # self.running = True
+        # self.cond_var = threading.Condition() 
+        # worker_thread = threading.Thread(target=self.batch_collector, daemon=True)
+        # worker_thread.start()
         
         # Tracking metrics
         self.processed_tasks = 0
@@ -55,14 +55,13 @@ class QACheckUDL(UserDefinedLogic):
         '''
         Load model to GPU
         '''
-        print(f"[{time.time():.2f}] Loading model to GPU...")
+        print(f"[{time.time():.2f}] QA check Loading model to GPU...")
         self.nli_tokenizer = BartTokenizer.from_pretrained(self.model_name)
         self.model = BartForSequenceClassification.from_pretrained(self.model_name)
         for param in self.model.parameters():
             param.requires_grad = False
         self.model.to(self.device)
         self.model.eval()
-        print(f"[{time.time():.2f}] Model loaded to GPU")
 
 
     def batch_collector(self):
@@ -94,10 +93,10 @@ class QACheckUDL(UserDefinedLogic):
                     break
 
             if batch:
-                print(f"[{time.time():.2f}] Running inference on batch of size {len(batch)}...")
                 batch_latency, true_probs = self.textcheck(batch)
-                print(f"[{time.time():.2f}] Batch Latency: {batch_latency:.3f}s ")
+                
                 self.send_to_next_udl(true_probs)
+                print(f" QA check latency: {batch_latency:.3f}s, batch of size {len(batch)}. sent to next UDL ")
                 
 
     def textcheck(self, batch_premise):
@@ -108,7 +107,7 @@ class QACheckUDL(UserDefinedLogic):
         if self.nli_tokenizer is None:
             self.load_model_toGPU()
         
-        print(f"[{time.time():.2f}] textcheck Processing batch of size {len(batch_premise)}...")
+        print(f"[{time.time():.2f}] QA check Processing batch of size {len(batch_premise)}...")
         # Note: this step is blocking, doesn't release the GIL  
         inputs = self.nli_tokenizer(batch_premise, [self.hypothesis] * len(batch_premise),
                         return_tensors="pt", padding=True, truncation=True).to(self.device)
@@ -131,7 +130,6 @@ class QACheckUDL(UserDefinedLogic):
         #     print(f"[{time.time():.2f}] Premise {i+1}: Probability that the label is true: {prob:.2f}%")
         self.processed_tasks += len(batch_premise)
         
-        print(f"[{time.time():.2f}] Processed {self.processed_tasks} tasks")
 
         return batch_latency, true_probs
 
@@ -145,6 +143,16 @@ class QACheckUDL(UserDefinedLogic):
         pass
 
 
+    def add_tasks_to_queue(self, input_texts):
+        """
+        Adds a text classification task to the queue with timestamp
+        """
+        with self.cond_var:            
+            for input_text in input_texts:
+                self.task_queue.put((input_text))
+                print(f"[{time.time():.2f}] Task added to QA check queue. Queue size: {self.task_queue.qsize()}")
+            self.cond_var.notify()
+
 
     def ocdpo_handler(self,**kwargs):
         """
@@ -154,8 +162,8 @@ class QACheckUDL(UserDefinedLogic):
         blob = kwargs["blob"]
         doc_gen_result_batch = DocGenResultBatcher()
         doc_gen_result_batch.deserialize_response(blob)
-        print(f"[{time.time():.2f}] qa_check Received query")
         self.textcheck(doc_gen_result_batch.responses)
+        # self.add_tasks_to_queue(doc_gen_result_batch.responses)
         
         
 

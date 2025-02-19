@@ -40,14 +40,14 @@ class QACheckBatchUDL(UserDefinedLogic):
         '''
         Load model to GPU
         '''
-        print(f"[{time.time():.2f}] Loading model to GPU...")
+        print(f"[{time.time():.2f}] QA check Loading model to GPU...")
         self.nli_tokenizer = BartTokenizer.from_pretrained(self.model_name)
         self.model = BartForSequenceClassification.from_pretrained(self.model_name)
         for param in self.model.parameters():
             param.requires_grad = False
         self.model.to(self.device)
         self.model.eval()
-        print(f"[{time.time():.2f}] Model loaded to GPU")
+        print(f"[{time.time():.2f}] QA check Model loaded to GPU")
 
 
     def textcheck(self, batch_premise):
@@ -58,7 +58,7 @@ class QACheckBatchUDL(UserDefinedLogic):
         if self.nli_tokenizer is None:
             self.load_model_toGPU()
         
-        print(f"[{time.time():.2f}] textcheck Processing batch of size {len(batch_premise)}...")
+        print(f"[{time.time():.2f}] QA check Processing batch of size {len(batch_premise)}...")
         # Note: this step is blocking, doesn't release the GIL  
         inputs = self.nli_tokenizer(batch_premise, [self.hypothesis] * len(batch_premise),
                         return_tensors="pt", padding=True, truncation=True).to(self.device)
@@ -81,7 +81,7 @@ class QACheckBatchUDL(UserDefinedLogic):
         #     print(f"[{time.time():.2f}] Premise {i+1}: Probability that the label is true: {prob:.2f}%")
         self.processed_tasks += len(batch_premise)
         
-        print(f"[{time.time():.2f}] Processed {self.processed_tasks} tasks")
+        print(f"[{time.time():.2f}] Processed {len(self.processed_tasks)} tasks")
 
         return batch_latency, true_probs
 

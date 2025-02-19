@@ -99,7 +99,7 @@ class DocGenerateUDL(UserDefinedLogic):
                 top_p=0.9,
             )
             query.response = llm_result[0]["generated_text"][-1]['content']
-            print(f" [DocGenerateUDL] llm generated response: {query.response[:10]}")
+            print(f" [DocGenerateUDL] llm generated responss")
             
      
     def ocdpo_handler(self,**kwargs):
@@ -108,10 +108,9 @@ class DocGenerateUDL(UserDefinedLogic):
         binary_data = np.frombuffer(blob, dtype=np.uint8)
         agg_results = AggregateResultBatch(binary_data)
         batched_queries = agg_results.get_queries(decode_texts=True)
-        print(f" [DocGenerateUDL] received {len(batched_queries)} queries from {key}")
         
         doc_gen_results = self.retrieve_documents(batched_queries)
-        print(f" [DocGenerateUDL] retrieved {len(doc_gen_results)} documents")
+        print(f" [DocGenerateUDL] retrieved {len(doc_gen_results)} documents for {key}")
         self.llm_generate(doc_gen_results)
 
         # serialize the result
