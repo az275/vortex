@@ -153,10 +153,9 @@ class QACheckUDL(UserDefinedLogic):
         key = kwargs["key"]
         blob = kwargs["blob"]
         doc_gen_result_batch = DocGenResultBatcher()
-        doc_gen_result_batch.deserialize_to_concate_strings(blob)
-        query_list = doc_gen_result_batch.full_texts
-        print(f"[{time.time():.2f}] Received query: {query_list}")
-        self.textcheck(query_list)
+        doc_gen_result_batch.deserialize_response(blob)
+        print(f"[{time.time():.2f}] qa_check Received query")
+        self.textcheck(doc_gen_result_batch.responses)
         
         
 

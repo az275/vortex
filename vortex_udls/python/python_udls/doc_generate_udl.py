@@ -121,7 +121,7 @@ class DocGenerateUDL(UserDefinedLogic):
         for result in doc_gen_results:
             result_batcher.add_doc_gen_result(result)
             
-        result_batcher.serialize_to_concate_strings()
+        result_batcher.serialize_response()
         
         # emit to the next UDL
         new_key = NEXT_UDL_PREFIXES[0] + f"/{key}"
