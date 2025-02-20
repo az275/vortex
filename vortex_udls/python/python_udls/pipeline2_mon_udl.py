@@ -151,7 +151,7 @@ class Pipeline2monoUDL(UserDefinedLogic):
 
     def encode(self,query_list):
         query_embeddings = self.encoder.encode(query_list)
-        print(f"finished encoding shape: {query_embeddings.shape}")
+        # print(f"finished encoding shape: {query_embeddings.shape}")
         return query_embeddings
 
 
@@ -214,7 +214,7 @@ class Pipeline2monoUDL(UserDefinedLogic):
             inputs = self.txt2speech_processor(text=chunk, return_tensors="pt").to("cuda")  # Move inputs to GPU
             speech = self.txt2speech_model.generate_speech(inputs["input_ids"], self.txt2speech_speaker_embeddings, vocoder=self.txt2speech_vocoder)
             speech_outputs.append(speech.cpu().numpy())  # Move back to CPU before converting to NumPy
-            print(f"Chunk {idx+1}/{len(text_chunks)} processed.")
+            # print(f"Chunk {idx+1}/{len(text_chunks)} processed.")
         
         full_speech = np.concatenate(speech_outputs, axis=0)
         return full_speech
@@ -231,7 +231,7 @@ class Pipeline2monoUDL(UserDefinedLogic):
         
         batched_query_embeddings = self.encoder.encode(_batch.query_list)
 
-        print(f"query_embeddings shape: {batched_query_embeddings.shape}")
+        # print(f"query_embeddings shape: {batched_query_embeddings.shape}")
         _, batched_indices = self.search_queries(batched_query_embeddings, top_k=5)
         
         for i in range(len(_batch.query_list)):
@@ -247,7 +247,7 @@ class Pipeline2monoUDL(UserDefinedLogic):
             end_time = time.perf_counter_ns()
             latency = (end_time - start_time)/1000
             self.latencies.append(latency)
-            print(f"Latency: {latency} us")
+            print(f"Latency {i}/{len(_batch.query_list)}: {latency} us")
             
         print("Pipeline2 finished")
             
