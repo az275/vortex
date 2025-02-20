@@ -17,8 +17,8 @@ SUBGROUP_TYPES = {
         "TCSS": "TriggerCascadeNoStoreWithStringKey"
         }
 
-NUM_BATCHES = 1
-MAX_BATCH_SIZE = 2 # TODO: fix this
+NUM_BATCHES = 50
+MAX_BATCH_SIZE = 1 # TODO: fix this
 
 EMB_DIM = 384
 
@@ -151,7 +151,7 @@ def main(argv):
                 subgroup_index=0,shard_index=0, 
                 trigger=True, # Use trigger put
                 message_id=i)
-        
+        time.sleep(25)
         print(f"Put key:{key} to Cascade.")
     
 

@@ -164,7 +164,10 @@ class QACheckUDL(UserDefinedLogic):
         doc_gen_result_batch.deserialize_response(blob)
         self.textcheck(doc_gen_result_batch.responses)
         # self.add_tasks_to_queue(doc_gen_result_batch.responses)
-        
+        for query_id in doc_gen_result_batch.query_ids:
+            self.tl.log(20051, query_id, 0, 0)
+            if query_id == 50:
+                self.tl.flush(f"node{self.my_id}_udls_timestamp.dat")
         
 
     def __del__(self):

@@ -26,6 +26,7 @@ class EncodeSearchUDL(UserDefinedLogic):
         self._batch_id = 0
 
     def ocdpo_handler(self, **kwargs):
+        # self._tl.log("EncodeSearchUDL: ocdpo_handler")
         if self._encoder is None:
             # load encoder when we need it to prevent overloading
             # the hardware during startup
@@ -34,7 +35,8 @@ class EncodeSearchUDL(UserDefinedLogic):
                 device=self._conf["encoder_config"]["device"],
                 use_fp16=False,
             )
-
+        message_id = kwargs["message_id"]
+        self._tl.log(10001, message_id, 0, 0)
         data = kwargs["blob"]
         
         
