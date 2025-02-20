@@ -124,6 +124,26 @@
         ]
     },
     {
+        "id": "200000000-2bbb-11b2-2222-000000022222",
+        "desc": "Monolithic UDL for Pipeline2",
+        "graph": [
+            {
+                "pathname": "/pipeline2_mon",
+                "user_defined_logic_list": ["6cfe8f64-3a1d-11ed-8e7e-0242ac110006"],
+                "user_defined_logic_stateful_list": ["singlethreaded"],
+                "user_defined_logic_config_list": [
+                    {
+                        "python_path":["python_udls"],
+                        "module":"pipeline2_mon_udl",
+                        "entry_class":"Pipeline2monoUDL",
+                        "doc_file_pathname":"perf_data/miniset/doc_list.pkl",
+                        "emb_directory":"perf_data/miniset"
+                    }],
+                "destinations": [{}]
+            }
+        ]
+    },
+    {
         "id": "100000000-1aaa-00a0-0000-000000000000",
         "desc": "Example Dataflow graph with Python UDL",
         "graph": [

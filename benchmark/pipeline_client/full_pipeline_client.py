@@ -17,12 +17,13 @@ SUBGROUP_TYPES = {
         "TCSS": "TriggerCascadeNoStoreWithStringKey"
         }
 
-NUM_BATCHES = 3
+NUM_BATCHES = 1
 MAX_BATCH_SIZE = 2 # TODO: fix this
 
 EMB_DIM = 384
 
-UDL1_PATH = "/rag/emb/encode_search"
+# UDL1_PATH = "/rag/emb/encode_search"
+UDL1_PATH = "/pipeline2_mon"
 
 QUERY_FILENAME = "query.csv"
 
