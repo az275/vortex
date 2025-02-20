@@ -22,8 +22,8 @@ MAX_BATCH_SIZE = 1 # TODO: fix this
 
 EMB_DIM = 384
 
-# UDL1_PATH = "/rag/emb/encode_search"
-UDL1_PATH = "/pipeline2_mon"
+UDL1_PATH = "/rag/emb/encode_search"
+# UDL1_PATH = "/pipeline2_mon"
 
 QUERY_FILENAME = "query.csv"
 
@@ -61,7 +61,7 @@ def serialize(queries, query_ids, emb_size):
     num_queries = len(queries)
     text_size_mapping = {}
     total_text_size = 0
-    print(f"queries {queries}")
+    # print(f"queries {queries}")
 
     # Compute sizes
     for i, query in enumerate(queries):

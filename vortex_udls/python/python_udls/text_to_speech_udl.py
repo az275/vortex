@@ -55,7 +55,7 @@ class TextToSpeechUDL(UserDefinedLogic):
         embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
         self.speaker_embeddings = torch.tensor(embeddings_dataset[7306]["xvector"]).unsqueeze(0).to(self.device)
 
-        print(f"Txt2Speech Model loaded to GPU")
+        # print(f"Txt2Speech Model loaded to GPU")
 
 
     def split_text(self, text, chunk_size=550):
@@ -76,12 +76,12 @@ class TextToSpeechUDL(UserDefinedLogic):
             inputs = self.processor(text=chunk, return_tensors="pt").to(self.device) 
             speech = self.model.generate_speech(inputs["input_ids"], self.speaker_embeddings, vocoder=self.vocoder)
             speech_outputs.append(speech.cpu().numpy())  # Move back to CPU before converting to NumPy
-            print(f"Chunk {idx+1}/{len(text_chunks)} processed.")
+            # print(f"Chunk {idx+1}/{len(text_chunks)} processed.")
         full_speech = np.concatenate(speech_outputs, axis=0)
 
         if self.write_to_disk:
             sf.write("speech.wav", full_speech, samplerate=16000)
-        print(f" Txt2Speech Speech generated")
+        # print(f" Txt2Speech Speech generated")
         return full_speech
 
 
@@ -98,9 +98,9 @@ class TextToSpeechUDL(UserDefinedLogic):
             query_id = doc_gen_result.query_id
             self.speech_generation(doc_gen_result)
             self.tl.log(20050, query_id, 0, 0)
-            if query_id == 50:
+            if query_id == 20:
                 self.tl.flush(f"node{self.my_id}_udls_timestamp.dat")
-        print(f" text2speech result generated")
+                print(f" text2speech flushed data")
         
 
     def __del__(self):

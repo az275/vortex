@@ -122,7 +122,7 @@ class DocGenerateUDL(UserDefinedLogic):
         # emit to the next UDL
         new_key = NEXT_UDL_PREFIXES[0] + f"/{key}"
         cascade_context.emit(new_key, result_batcher._bytes)
-        print(f" [DocGenerateUDL] emitted {key} results to {new_key}")
+        # print(f" [DocGenerateUDL] emitted {key} results to {new_key}")
 
           
 

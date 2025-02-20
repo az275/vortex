@@ -96,7 +96,7 @@ class QACheckUDL(UserDefinedLogic):
                 batch_latency, true_probs = self.textcheck(batch)
                 
                 self.send_to_next_udl(true_probs)
-                print(f" QA check latency: {batch_latency:.3f}s, batch of size {len(batch)}. sent to next UDL ")
+                # print(f" QA check latency: {batch_latency:.3f}s, batch of size {len(batch)}. sent to next UDL ")
                 
 
     def textcheck(self, batch_premise):
@@ -107,7 +107,7 @@ class QACheckUDL(UserDefinedLogic):
         if self.nli_tokenizer is None:
             self.load_model_toGPU()
         
-        print(f"[{time.time():.2f}] QA check Processing batch of size {len(batch_premise)}...")
+        # print(f"[{time.time():.2f}] QA check Processing batch of size {len(batch_premise)}...")
         # Note: this step is blocking, doesn't release the GIL  
         inputs = self.nli_tokenizer(batch_premise, [self.hypothesis] * len(batch_premise),
                         return_tensors="pt", padding=True, truncation=True).to(self.device)
@@ -150,7 +150,7 @@ class QACheckUDL(UserDefinedLogic):
         with self.cond_var:            
             for input_text in input_texts:
                 self.task_queue.put((input_text))
-                print(f"[{time.time():.2f}] Task added to QA check queue. Queue size: {self.task_queue.qsize()}")
+                # print(f"[{time.time():.2f}] Task added to QA check queue. Queue size: {self.task_queue.qsize()}")
             self.cond_var.notify()
 
 
@@ -166,8 +166,9 @@ class QACheckUDL(UserDefinedLogic):
         # self.add_tasks_to_queue(doc_gen_result_batch.responses)
         for query_id in doc_gen_result_batch.query_ids:
             self.tl.log(20051, query_id, 0, 0)
-            if query_id == 50:
+            if query_id == 20:
                 self.tl.flush(f"node{self.my_id}_udls_timestamp.dat")
+                print(f"QA check flushed data")
         
 
     def __del__(self):
