@@ -138,8 +138,8 @@
                         "entry_class":"Pipeline2monoUDL",
                         "use_precomputed_index":true,
                         "index_file":"/mydata/msmarco/msmarco.index",
-                        "doc_file_pathname":"perf_data/miniset/doc_list.pkl",
-                        "emb_directory":"perf_data/miniset"
+                        "doc_file_pathname":"/mydata/msmarco/msmarco_3_clusters/doc_list.pkl",
+                        "emb_directory":"/mydata/msmarco/msmarco_3_clusters"
                     }],
                 "destinations": [{}]
             }
