@@ -136,6 +136,8 @@
                         "python_path":["python_udls"],
                         "module":"pipeline2_mon_udl",
                         "entry_class":"Pipeline2monoUDL",
+                        "use_precomputed_index":True,
+                        "index_file":"/mydata/msmarco/msmarco.index",
                         "doc_file_pathname":"perf_data/miniset/doc_list.pkl",
                         "emb_directory":"perf_data/miniset"
                     }],

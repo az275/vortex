@@ -36,6 +36,8 @@ class Pipeline2monoUDL(UserDefinedLogic):
         self.emb_dim = 384
         
         # Search variables
+        self.use_precomputed_index = self.conf["use_precomputed_index"]
+        self.index_file = self.conf["index_file"]
         self.index_type = 'Flat'
         self.nprobe = 1
         self.index = None
@@ -69,8 +71,11 @@ class Pipeline2monoUDL(UserDefinedLogic):
 
     def load_all(self):
         self.load_models()
-        self.load_cluster_embeddings(self.emb_directory)
-        self.build_ivf_index()
+        if self.use_precomputed_index:
+            self.load_index()
+        else:
+            self.load_cluster_embeddings(self.emb_directory)
+            self.build_ivf_index()
         self.model_loaded = True
 
 
@@ -131,6 +136,12 @@ class Pipeline2monoUDL(UserDefinedLogic):
 
         self.index.train(self.cluster_embeddings)
         self.index.add(self.cluster_embeddings) 
+
+
+    def load_index(self):
+        self.index = faiss.read_index(self.index_file)
+        gpu_res = faiss.StandardGpuResources()
+        self.index = faiss.index_cpu_to_gpu(gpu_res, 0, self.index)
 
 
     def search_queries(self, query_embeddings, top_k=5):
