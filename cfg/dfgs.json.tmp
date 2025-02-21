@@ -90,7 +90,7 @@
                         "python_path":["python_udls"],
                         "module":"doc_generate_udl",
                         "entry_class":"DocGenerateUDL",
-                        "doc_file_name":"./mydata/msmarco/msmarco_3_clusters/doc_list.pkl",
+                        "doc_file_name":"/mydata/msmarco/msmarco_3_clusters/doc_list.pkl",
                         "udl_conf_key1":"doc_gen_udl config key 1"
                     }],
                 "destinations": [{"/rag/generate/check":"put", "/rag/generate/speech":"put"}]
