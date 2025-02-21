@@ -36,6 +36,7 @@ class EncodeUDL(UserDefinedLogic):
                 use_fp16=False,
             )
         message_id = kwargs["message_id"]
+        # TODO: this logging only works for batch of 1
         self._tl.log(10001, message_id, 0, 0)
         data = kwargs["blob"]
         

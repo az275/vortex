@@ -95,7 +95,7 @@ class TextToSpeechUDL(UserDefinedLogic):
         doc_gen_result_batch.deserialize_response(blob)
         for i in range(len(doc_gen_result_batch.responses)):
             doc_gen_result = doc_gen_result_batch.responses[i]
-            query_id = doc_gen_result.query_id
+            query_id = int(doc_gen_result_batch.query_ids[i])
             self.speech_generation(doc_gen_result)
             self.tl.log(20050, query_id, 0, 0)
             if query_id == 20:
