@@ -29,9 +29,9 @@
                     {
                         "centroids_emb_prefix":"/rag/emb/centroids_obj",
                         "emb_dim":384,
-                        "top_num_centroids":3,
+                        "top_num_centroids":2,
                         "faiss_search_type":0,
-                        "num_search_threads":1,
+                        "num_search_threads":5,
                         "min_batch_size":1,
                         "max_batch_size":100,
                         "batch_time_us":1000,
