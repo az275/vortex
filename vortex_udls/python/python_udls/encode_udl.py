@@ -17,7 +17,7 @@ from pyudl_serialize_utils import Batch
 
 
 
-class EncodeSearchUDL(UserDefinedLogic):
+class EncodeUDL(UserDefinedLogic):
     def __init__(self, conf_str: str):
         self._conf: dict[str, Any] = json.loads(conf_str)
         self._tl = TimestampLogger()
@@ -26,7 +26,7 @@ class EncodeSearchUDL(UserDefinedLogic):
         self._batch_id = 0
 
     def ocdpo_handler(self, **kwargs):
-        # self._tl.log("EncodeSearchUDL: ocdpo_handler")
+        # self._tl.log("EncodeUDL: ocdpo_handler")
         if self._encoder is None:
             # load encoder when we need it to prevent overloading
             # the hardware during startup

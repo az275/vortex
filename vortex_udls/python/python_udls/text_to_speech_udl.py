@@ -93,7 +93,7 @@ class TextToSpeechUDL(UserDefinedLogic):
         blob = kwargs["blob"]
         doc_gen_result_batch = DocGenResultBatcher()
         doc_gen_result_batch.deserialize_response(blob)
-        for i in len(doc_gen_result_batch.responses):
+        for i in range(len(doc_gen_result_batch.responses)):
             doc_gen_result = doc_gen_result_batch.responses[i]
             query_id = doc_gen_result.query_id
             self.speech_generation(doc_gen_result)

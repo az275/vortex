@@ -440,3 +440,74 @@ class DocGenResultBatcher:
 
 
 
+class QACheckResultBatch:
+    def __init__(self):
+        self._bytes: np.ndarray = np.array([], dtype=np.uint8)
+        self.qa_results = []
+
+    def add_qa_result(self, query_id: int, client_id: int, qa_score: int):
+        """
+        Adds a QA check result (query_id, client_id, score from 0-100).
+        """
+        assert 0 <= qa_score <= 100, "QA score must be between 0 and 100"
+        self.qa_results.append((query_id, client_id, qa_score))
+
+    def serialize_qa_results(self) -> np.ndarray:
+        """
+        Serializes QA check results into a structured NumPy byte array.
+        """
+        num_results = len(self.qa_results)
+        metadata_dtype = np.dtype([
+            ('query_id', np.uint64),
+            ('client_id', np.uint32),
+            ('qa_score', np.uint8),
+        ])
+
+        header_dtype = np.dtype([('count', np.uint32)])
+
+        header_size = header_dtype.itemsize
+        metadata_size = num_results * metadata_dtype.itemsize
+        total_size = header_size + metadata_size
+
+        buffer = np.zeros(total_size, dtype=np.uint8)
+
+        # Write header
+        np.frombuffer(buffer[:header_size], dtype=header_dtype)['count'] = num_results
+
+        # Write metadata
+        metadata_view = np.frombuffer(buffer[header_size:], dtype=metadata_dtype)
+        metadata_view[:] = self.qa_results
+
+        self._bytes = buffer
+        return buffer
+
+    def deserialize_qa_results(self, data: np.ndarray):
+        """
+        Deserializes structured NumPy byte array back into QA results.
+        """
+        self._bytes = data
+
+        header_dtype = np.dtype([('count', np.uint32)])
+        metadata_dtype = np.dtype([
+            ('query_id', np.uint64),
+            ('client_id', np.uint32),
+            ('qa_score', np.uint8),
+        ])
+
+        # Read header
+        num_results = np.frombuffer(data[:header_dtype.itemsize], dtype=header_dtype)[0]['count']
+
+        metadata_start = header_dtype.itemsize
+        metadata_end = metadata_start + metadata_dtype.itemsize * num_results
+
+        # Read metadata
+        metadata_records = np.frombuffer(data[metadata_start:metadata_end], dtype=metadata_dtype)
+
+        self.qa_results = [(record['query_id'], record['client_id'], record['qa_score']) for record in metadata_records]
+
+    def get_qa_results(self):
+        """
+        Returns the QA results as a list of tuples (query_id, client_id, qa_score).
+        """
+        return self.qa_results
+    

@@ -22,7 +22,7 @@ MAX_BATCH_SIZE = 1 # TODO: fix this
 
 EMB_DIM = 384
 
-UDL1_PATH = "/rag/emb/encode_search"
+UDL1_PATH = "/rag/emb/encode"
 # UDL1_PATH = "/pipeline2_mon"
 
 QUERY_FILENAME = "query.csv"
@@ -147,8 +147,8 @@ def main(argv):
         
         _subgroup_type = SUBGROUP_TYPES["VCSS"]
         capi.put(key, serialized_requests.tobytes(), 
-                subgroup_type=_subgroup_type,
-                subgroup_index=0,shard_index=0, 
+                # subgroup_type=_subgroup_type,
+                # subgroup_index=0,shard_index=0, 
                 trigger=True, # Use trigger put
                 message_id=i)
         time.sleep(25)

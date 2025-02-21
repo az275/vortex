@@ -4,15 +4,15 @@
         "desc": "Vortex UDLs Dataflow graph",
         "graph": [
             {
-                "pathname": "/rag/emb/encode_search",
+                "pathname": "/rag/emb/encode",
                 "shard_dispatcher_list": ["one"],
                 "user_defined_logic_list": ["6cfe8f64-3a1d-11ed-8e7e-0242ac110006"],
                 "user_defined_logic_stateful_list": ["singlethreaded"],
                 "user_defined_logic_config_list": [
                     {
                         "python_path":["python_udls"],
-                        "module":"encode_search",
-                        "entry_class":"EncodeSearchUDL",
+                        "module":"encode_udl",
+                        "entry_class":"EncodeUDL",
                         "encoder_config": {
                             "model": "BAAI/bge-small-en-v1.5",
                             "device": "cuda"
