@@ -75,6 +75,7 @@ class DocGenerateUDL(UserDefinedLogic):
             self.load_doc()
         for query in queries:            
             result_list.append(DocGenResult(query['query_id'], query['client_id'], query['text'], [self.doc_content_list[doc_id] for doc_id in query['doc_ids']]))
+        print("[DocGenerateUDL] documents retrieved")
         return result_list
 
 
@@ -100,9 +101,11 @@ class DocGenerateUDL(UserDefinedLogic):
                 top_p=0.9,
             )
             query.response = llm_result[0]["generated_text"][-1]['content']
+        print("[DocGenerateUDL] LLM generation done")
             
      
     def ocdpo_handler(self,**kwargs):
+        print("[DocGenerateUDL] ocdpo_handler")
         key = kwargs["key"]
         blob = kwargs["blob"]
         binary_data = np.frombuffer(blob, dtype=np.uint8)
@@ -123,7 +126,7 @@ class DocGenerateUDL(UserDefinedLogic):
         new_key = NEXT_UDL_PREFIXES[0] + f"/{key}"
         cascade_context.emit(new_key, result_batcher._bytes)
         # print(f" [DocGenerateUDL] emitted {key} results to {new_key}")
-
+        print("[DocGenerateUDL] emitted results to next UDL")
           
 
     def __del__(self):

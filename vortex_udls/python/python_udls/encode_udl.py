@@ -24,9 +24,11 @@ class EncodeUDL(UserDefinedLogic):
         self._encoder = None
         self._batch = Batch()
         self._batch_id = 0
+        print("[EncodeUDL] initialized")
 
     def ocdpo_handler(self, **kwargs):
         # self._tl.log("EncodeUDL: ocdpo_handler")
+        print("[EncodeUDL] ocdpo_handler")
         if self._encoder is None:
             # load encoder when we need it to prevent overloading
             # the hardware during startup
@@ -35,6 +37,7 @@ class EncodeUDL(UserDefinedLogic):
                 device=self._conf["encoder_config"]["device"],
                 use_fp16=False,
             )
+        print("[EncodeUDL] initialized encoder")
         message_id = kwargs["message_id"]
         # TODO: this logging only works for batch of 1
         self._tl.log(10001, message_id, 0, 0)
@@ -49,6 +52,7 @@ class EncodeUDL(UserDefinedLogic):
             return_sparse=False,
             return_colbert_vecs=False,
         )
+        print("[EncodeUDL] after running encoder model")
         query_embeddings: np.ndarray = res["dense_vecs"]
         self._batch_id += 1
 
@@ -57,6 +61,7 @@ class EncodeUDL(UserDefinedLogic):
         key_str = kwargs["key"]
         output_bytes = self._batch.serialize(query_embeddings)
         cascade_context.emit(key_str, output_bytes, message_id=kwargs["message_id"])
+        print("[EncodeUDL] emitted results to next UDL")
         return None
     
     def __del__(self):

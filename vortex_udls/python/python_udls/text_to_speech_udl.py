@@ -40,6 +40,7 @@ class TextToSpeechUDL(UserDefinedLogic):
         self.vocoder = None
         self.speaker_embeddings = None
         self.write_to_disk = False
+        print("[TextToSpeechUDL] initialized")
         
         
     def load_model_toGPU(self):
@@ -55,7 +56,7 @@ class TextToSpeechUDL(UserDefinedLogic):
         embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
         self.speaker_embeddings = torch.tensor(embeddings_dataset[7306]["xvector"]).unsqueeze(0).to(self.device)
 
-        # print(f"Txt2Speech Model loaded to GPU")
+        print(f"Txt2Speech Model loaded to GPU")
 
 
     def split_text(self, text, chunk_size=550):
@@ -82,6 +83,7 @@ class TextToSpeechUDL(UserDefinedLogic):
         if self.write_to_disk:
             sf.write("speech.wav", full_speech, samplerate=16000)
         # print(f" Txt2Speech Speech generated")
+        print("[TextToSpeechUDL] speech generation finished")
         return full_speech
 
 
@@ -89,6 +91,7 @@ class TextToSpeechUDL(UserDefinedLogic):
         """
         Handles incoming tasks
         """
+        print("[TextToSpeechUDL] ocdpo_handler")
         key = kwargs["key"]
         blob = kwargs["blob"]
         doc_gen_result_batch = DocGenResultBatcher()

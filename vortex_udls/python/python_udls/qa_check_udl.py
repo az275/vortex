@@ -48,6 +48,7 @@ class QACheckUDL(UserDefinedLogic):
         # Tracking metrics
         self.processed_tasks = 0
         self.total_latency = 0
+        print("[QACheckUDL] initialized")
         
         
         
@@ -62,7 +63,7 @@ class QACheckUDL(UserDefinedLogic):
             param.requires_grad = False
         self.model.to(self.device)
         self.model.eval()
-
+        print("[QACheckUDL] model loaded to GPU")
 
     def batch_collector(self):
         """
@@ -129,7 +130,7 @@ class QACheckUDL(UserDefinedLogic):
         # for i, prob in enumerate(true_probs.tolist()):
         #     print(f"[{time.time():.2f}] Premise {i+1}: Probability that the label is true: {prob:.2f}%")
         self.processed_tasks += len(batch_premise)
-        
+        print("[QACheckUDL] textcheck finished running")
 
         return batch_latency, true_probs
 
@@ -158,6 +159,7 @@ class QACheckUDL(UserDefinedLogic):
         """
         Handles incoming tasks
         """
+        print("[QACheckUDL] ocdpo_handler")
         key = kwargs["key"]
         blob = kwargs["blob"]
         doc_gen_result_batch = DocGenResultBatcher()
