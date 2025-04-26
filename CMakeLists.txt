@@ -13,9 +13,9 @@ find_package(derecho CONFIG REQUIRED)
 find_package(cascade CONFIG REQUIRED)
 
 # Find Faiss package
-find_package(Faiss REQUIRED)
+#find_package(Faiss REQUIRED)
 # Find CUDA Toolkit if using Faiss with GPU support
-find_package(CUDAToolkit REQUIRED)
+#find_package(CUDAToolkit REQUIRED)
 # Find Hnswlib package
 find_package(hnswlib REQUIRED)
 
@@ -36,7 +36,6 @@ endif()
 
 
 include_directories(
-    ${FAISS_INCLUDE_DIRS}
     ${HNSWLIB_INCLUDE_DIRS}
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
