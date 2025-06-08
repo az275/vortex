@@ -29,8 +29,8 @@ class EncoderUDL(UserDefinedLogic):
           '''
           The off-critical data path handler
           '''
-          value = kwargs["blob"][1]
-          input_str = f"String id {value}"
+          blob = kwargs["blob"]
+          input_str = blob.tobytes().decode()
           print(input_str)
           string_embedding = self.encoder.encode(input_str)
           print(f"String embedding: {string_embedding}")
